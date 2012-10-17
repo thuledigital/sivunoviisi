@@ -1,0 +1,78 @@
+; 28.2.2012 - Global Redirect -moduuli (globalredirect) hajotti asennuksen. Moduuli poistettu.
+
+name = sivunoviisi 0.3
+description = Projektien perusta
+version = VERSION
+core = 7.x
+dependencies[] = block
+dependencies[] = comment
+dependencies[] = contextual
+; dependencies[] = dashboard
+dependencies[] = help
+dependencies[] = image
+dependencies[] = list
+dependencies[] = menu
+dependencies[] = number
+dependencies[] = options
+dependencies[] = path
+dependencies[] = taxonomy
+dependencies[] = dblog
+dependencies[] = search
+dependencies[] = shortcut
+; dependencies[] = toolbar
+dependencies[] = overlay
+dependencies[] = field
+dependencies[] = field_ui
+dependencies[] = file
+dependencies[] = rdf
+
+; Perussetti
+dependencies[] = admin_menu
+dependencies[] = admin_menu_toolbar
+dependencies[] = backup_migrate
+dependencies[] = colorbox
+dependencies[] = ctools
+dependencies[] = fontyourface
+dependencies[] = fontyourface_ui
+dependencies[] = fontsquirrel
+dependencies[] = google_fonts_api
+; dependencies[] = l10n_update TESTAAAAA
+dependencies[] = image_resize_filter
+dependencies[] = pathauto
+dependencies[] = spamspan
+; dependencies[] = sweaver
+dependencies[] = token
+dependencies[] = transliteration
+; dependencies[] = wysiwyg
+; Fontyourface vaatii viewsin
+dependencies[] = views
+dependencies[] = views_ui
+dependencies[] = ds
+dependencies[] = ds_extras
+dependencies[] = ds_forms
+dependencies[] = diff
+dependencies[] = module_filter
+
+; Media
+; dependencies[] = media
+; dependencies[] = media_youtube
+; dependencies[] = file_entity
+dependencies[] = ckeditor
+dependencies[] = imagecrop
+dependencies[] = imce
+dependencies[] = imce_filefield
+dependencies[] = imce_mkdir
+
+; Pronssi
+dependencies[] = googleanalytics
+
+; Features
+dependencies[] = perussivu
+dependencies[] = ilmoita_uudesta_viestista
+
+files[] = sivunoviisi.profile
+
+; Information added by drupal.org packaging script on 2012-06-17
+version = "7.15"
+project = "drupal"
+datestamp = "1319660730"

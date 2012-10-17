@@ -1,0 +1,386 @@
+<?php
+
+/**
+ * Implements hook_install().
+ *
+ * Perform actions to set up the site for this profile.
+ */
+function sivunoviisi_install() {
+  // Add text formats.
+  $filtered_html_format = array(
+    'format' => 'filtered_html',
+    'name' => 'Filtered HTML',
+    'weight' => 1,
+    'filters' => array(
+      // URL filter.
+      'filter_url' => array(
+        'weight' => 0,
+        'status' => 1,
+      ),
+      // HTML filter.
+      'filter_html' => array(
+        'weight' => 1,
+        'status' => 1,
+      ),
+      // Line break filter.
+      'filter_autop' => array(
+        'weight' => 2,
+        'status' => 1,
+      ),
+      // HTML corrector filter.
+      'filter_htmlcorrector' => array(
+        'weight' => 10,
+        'status' => 1,
+      ),
+    ),
+  );
+  $filtered_html_format = (object) $filtered_html_format;
+  filter_format_save($filtered_html_format);
+
+  $full_html_format = array(
+    'format' => 'full_html',
+    'name' => 'Full HTML',
+    'weight' => 0,
+    'filters' => array(
+      // URL filter.
+      'filter_url' => array(
+        'weight' => 0,
+        'status' => 1,
+      ),
+      // Line break filter.
+      'filter_autop' => array(
+        'weight' => 1,
+        'status' => 1,
+      ),
+      // SpamSpan.
+      'spamspan' => array(
+        'weight' => 3,
+        'status' => 1,
+      ),
+      // Image resize filter.
+      'image_resize_filter' => array(
+        'weight' => 4,
+        'status' => 1,
+        'settings' => array(
+          'link' => 0,
+          'link_class' => '',
+          'link_rel' => '',
+          'image_locations' => array(
+            'local' => 'local',
+            'remote' => 0,
+          ),
+        ),
+      ),
+      // HTML corrector filter.
+      'filter_htmlcorrector' => array(
+        'weight' => 10,
+        'status' => 1,
+      ),
+    ),
+  );
+  $full_html_format = (object) $full_html_format;
+  filter_format_save($full_html_format);
+
+  // Enable some standard blocks.
+  $default_theme = variable_get('theme_default', 'bartik');
+  $admin_theme = 'seven';
+  $values = array(
+    array(
+      'module' => 'system',
+      'delta' => 'main',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'content',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'node',
+      'delta' => 'recent',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => 10,
+      'region' => 'dashboard_main',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'user',
+      'delta' => 'login',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'sidebar_first',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'system',
+      'delta' => 'navigation',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'sidebar_first',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'system',
+      'delta' => 'main',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'content',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'system',
+      'delta' => 'help',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'help',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'user',
+      'delta' => 'login',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => 10,
+      'region' => 'content',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'user',
+      'delta' => 'new',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'dashboard_sidebar',
+      'pages' => '',
+      'cache' => -1,
+    ),
+  );
+  $query = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache'));
+  foreach ($values as $record) {
+    $query->values($record);
+  }
+  $query->execute();
+
+  // Insert default pre-defined node types into the database. For a complete
+  // list of available node type attributes, refer to the node type API
+  // documentation at: http://api.drupal.org/api/HEAD/function/hook_node_info.
+  // Poistetty "Article"
+  $types = array(
+    array(
+      'type' => 'page',
+      'name' => st('Basic page'),
+      'base' => 'node_content',
+      'description' => st("Use <em>basic pages</em> for your static content, such as an 'About us' page."),
+      'custom' => 1,
+      'modified' => 1,
+      'locked' => 0,
+    ),
+  );
+
+  foreach ($types as $type) {
+    $type = node_type_set_defaults($type);
+    node_type_save($type);
+    node_add_body_field($type);
+  }
+
+  // Insert default pre-defined RDF mapping into the database.
+  $rdf_mappings = array(
+    array(
+      'type' => 'node',
+      'bundle' => 'page',
+      'mapping' => array(
+        'rdftype' => array('foaf:Document'),
+      ),
+    ),
+  );
+  foreach ($rdf_mappings as $rdf_mapping) {
+    rdf_mapping_save($rdf_mapping);
+  }
+
+  // Default "Basic page" to not be promoted and have comments disabled.
+  variable_set('node_options_page', array('status'));
+  variable_set('comment_page', COMMENT_NODE_HIDDEN);
+
+  // Don't display date and author information for "Basic page" nodes by default.
+  variable_set('node_submitted_page', FALSE);
+
+  // Enable user picture support and set the default to a square thumbnail option.
+  variable_set('user_pictures', '1');
+  variable_set('user_picture_dimensions', '1000x1000');
+  variable_set('user_picture_file_size', '800');
+  variable_set('user_picture_style', 'thumbnail');
+
+  // Allow visitor account creation with administrative approval.
+  variable_set('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
+
+
+
+  // Enable default permissions for system roles.
+  $filtered_html_permission = filter_permission_name($filtered_html_format);
+  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content', 'access comments', $filtered_html_permission));
+  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access content', 'access comments', 'post comments', 'skip comment approval', $filtered_html_permission));
+
+  // Luodaan Vieras-rooli
+  // Openjoku...
+  $admin_role = new stdClass();
+  $admin_role->name = 'Vieras';
+  $admin_role->weight = 3;
+  user_role_save($admin_role);
+  $permissions = array(
+    'view own unpublished content',
+    'access content overview', // Paasy sisallon yllapitosivulle
+    'view the administration theme',
+    'access overlay',
+    'change own username'
+  );
+  user_role_grant_permissions($admin_role->rid, $permissions);
+  // Set this as the editor role.
+  variable_set('user_editor_role', $admin_role->rid);
+
+  // Luodaan Hallinta-rooli
+  // Openjoku...
+  $admin_role = new stdClass();
+  $admin_role->name = 'Hallinta';
+  $admin_role->weight = 4;
+  user_role_save($admin_role);
+  $permissions = array(
+    'access administration menu', // Yllapida valikoita ja valikkolinkkeja
+    'use text format full_html', // Kayta tekstimuotoa Full HTML
+    'view own unpublished content',
+    'create page content',
+    'edit own page content',
+    'edit any page content',
+    'delete own page content',
+    'delete any page content',
+    'access content overview', // Paasy sisallon yllapitosivulle
+    'administer nodes', // Yllapida sisaltoa
+    'access administration pages', // Kayta yllapito- ja ohjesivuja
+    'access site reports', // Nayta sivuston raportit
+    'view the administration theme',
+    'create url aliases',
+    'administer shortcuts',
+    'access overlay',
+    'block IP addresses',
+    //'import media', // media
+    //'add media from remote sources', // media
+    //'edit file', // media
+    'administer users',
+    'change own username'
+  );
+  user_role_grant_permissions($admin_role->rid, $permissions);
+  // Set this as the editor role.
+  variable_set('user_editor_role', $admin_role->rid);
+
+  // Create a Home link in the main menu.
+  $item = array(
+    'link_title' => st('Home'),
+    'link_path' => '<front>',
+    'menu_name' => 'main-menu',
+  );
+  menu_link_save($item);
+
+  // Update the menu router information.
+  menu_rebuild();
+
+  // Enable the admin theme.
+  db_update('system')
+    ->fields(array('status' => 1))
+    ->condition('type', 'theme')
+    ->condition('name', 'seven')
+    ->execute();
+  variable_set('admin_theme', 'seven');
+  variable_set('node_admin_theme', '1');
+
+  // Set default country from install profile
+  // Bahai Incubator
+  variable_set('site_default_country', 'FI');
+
+  // Set first day of week from install profile
+  // Bahai Incubator
+  // 1 = maanantai
+  variable_set('date_first_day', 1);
+  // Openenterprise
+  // Fiksaa!!!
+  variable_set('date_format_long', 'l, F j, Y - H:i');
+  variable_set('date_format_medium', 'j F, Y - H:i');
+  variable_set('date_format_short', 'd.m.Y - H:i');
+
+  // Set user timezone choice to FALSE
+  // Bahai Incubator
+  variable_set('configurable_timezones', FALSE);
+
+  // Enable transliteration on paths (? turns into a)
+  // http://drupal.org/project/corporative_site
+  variable_set('pathauto_transliterate', 1);
+
+  // Poista merkkijonoista muut merkit paitsi kirjaimet ja numerot
+  variable_set('pathauto_reduce_ascii', 1);
+
+  // Osoitteiden muodostamisen asetukset
+  // http://openpublicapp.com/
+  // variable_set('pathauto_node_blog_entry_pattern', 'blog/[node:created:custom:Y-m-d]/[node:title]');
+  // variable_set('pathauto_punctuation_underscore', '1');
+  variable_set('pathauto_node_pattern', '[node:menu-link:parent:parent:parent:title]/[node:menu-link:parent:parent:title]/[node:menu-link:parent:title]/[node:title]');
+  variable_set('pathauto_user_pattern', 'kayttaja/[user:name]');
+
+  // Place the search box in the header region
+  // http://drupal.org/project/corporative_site
+  // db_update('block')->fields(
+  //  array(
+  //    'region' => 'header',
+  //  )
+  // )
+  // ->condition('module', 'search', '=')
+  // ->condition('theme', 'bartik', '=')
+  // ->execute();
+
+  // Don't display date and author information for page nodes by default.
+  // http://drupal.org/project/churches
+  //$theme_settings = variable_get('theme_settings', array());
+  //$theme_settings['toggle_node_info_page'] = FALSE;
+  //variable_set('theme_settings', $theme_settings);
+
+  // Create home page content
+  // Bahai Incubator
+  // Volunteer rally
+  $node = new stdClass;
+  $node->type = 'page';
+  node_object_prepare($node);
+  $node->title = st('Tervetuloa!');
+  $node->language = LANGUAGE_NONE;
+  include_once dirname(__FILE__) . '/includes/etusivu.inc';
+  $node->body[LANGUAGE_NONE][0]['value'] = _sivunoviisi_etusivu_node();
+  //$node->body[$node->language][0]['value'] = st('T&auml;h&auml;n tulee ohjeita ja tervetuloteksti&auml;...');
+  $node->body[$node->language][0]['format'] = 'full_html';
+  //$node->path = array('alias' => 'etusivu');
+  node_save($node);
+  // $path = drupal_lookup_path('source', 'etusivu');
+  // variable_set('site_frontpage', $path);
+  // Maaritellaan etusivun osoite
+  variable_set('site_frontpage', 'node/1');
+
+  // Cachet paalle
+  // HUOM!!! TAMA VOI AIHEUTTAA ONGELMIA - SEURAA TILANNETTA!!!
+  variable_set('preprocess_css', '0');
+  variable_set('preprocess_js', '1');
+
+  // Pitaako tama olla...?
+  // openpublish
+  // sivunoviisi_set_wysiwyg_settings();
+}
+
+
+// Ladataan WYSIWYG-asetukset
+// include_once('sivunoviisi.wysiwyg.inc');
+// include_once dirname(__FILE__) . '/includes/wysiwyg.inc';
